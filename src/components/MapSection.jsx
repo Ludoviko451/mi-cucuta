@@ -52,12 +52,15 @@ export default function MapSection({
   
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [isLoadingComunas, setIsLoadingComunas] = useState(false);
+  
   const isPickingLocationRef = useRef(isPickingLocation);
+  const onLocationPickRef = useRef(onLocationPick);
 
-  // Sync ref to avoid re-binding click listener on map
+  // Sync refs to avoid re-binding click listener on map
   useEffect(() => {
     isPickingLocationRef.current = isPickingLocation;
-  }, [isPickingLocation]);
+    onLocationPickRef.current = onLocationPick;
+  }, [isPickingLocation, onLocationPick]);
 
   // 1. Initialize Map Instance
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function MapSection({
     // Set up click handler for coordinate picking
     map.on('click', (e) => {
       if (isPickingLocationRef.current) {
-        onLocationPick({
+        onLocationPickRef.current({
           lat: e.latlng.lat,
           lng: e.latlng.lng
         });
@@ -100,7 +103,7 @@ export default function MapSection({
         mapInstanceRef.current = null;
       }
     };
-  }, [onLocationPick]);
+  }, []);
 
   // 2. Render Markers based on the Active Module
   useEffect(() => {
