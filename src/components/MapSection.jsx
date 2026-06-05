@@ -48,6 +48,7 @@ export default function MapSection({
   const pickedMarkerRef = useRef(null);
   const geoJsonLayerRef = useRef(null);
   const markersMapRef = useRef({});
+  const lastFocusedIdRef = useRef(null);
   
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [isLoadingComunas, setIsLoadingComunas] = useState(false);
@@ -172,7 +173,7 @@ export default function MapSection({
           </div>
         `;
 
-        const marker = window.L.marker([srv.lat, srv.lng], { icon })
+        const marker = window.L.marker([Number(srv.lat), Number(srv.lng)], { icon })
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
@@ -236,7 +237,7 @@ export default function MapSection({
           </div>
         `;
 
-        const marker = window.L.marker([inc.lat, inc.lng], { icon })
+        const marker = window.L.marker([Number(inc.lat), Number(inc.lng)], { icon })
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
@@ -290,7 +291,7 @@ export default function MapSection({
           </div>
         `;
 
-        const marker = window.L.marker([farm.lat, farm.lng], { icon })
+        const marker = window.L.marker([Number(farm.lat), Number(farm.lng)], { icon })
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
@@ -317,7 +318,7 @@ export default function MapSection({
       if (inc.severity === 'Alta') intensity = 0.85;
       if (inc.severity === 'Baja') intensity = 0.25;
       const voteBonus = Math.min(0.15, (inc.upvotes || 0) * 0.01);
-      return [inc.lat, inc.lng, intensity + voteBonus];
+      return [Number(inc.lat), Number(inc.lng), intensity + voteBonus];
     });
 
     if (heatPoints.length > 0 && window.L.heatLayer) {
@@ -516,25 +517,32 @@ export default function MapSection({
         iconAnchor: [14, 14]
       });
 
-      const marker = window.L.marker([pickedLocation.lat, pickedLocation.lng], { icon: pickIcon })
+      const marker = window.L.marker([Number(pickedLocation.lat), Number(pickedLocation.lng)], { icon: pickIcon })
         .addTo(map);
       pickedMarkerRef.current = marker;
-      map.panTo([pickedLocation.lat, pickedLocation.lng]);
+      map.panTo([Number(pickedLocation.lat), Number(pickedLocation.lng)]);
     }
   }, [pickedLocation]);
 
   // 8. Focus Point flight handler
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !focusedIncident) return;
+    if (!map || !focusedIncident) {
+      lastFocusedIdRef.current = null;
+      return;
+    }
 
-    map.flyTo([focusedIncident.lat, focusedIncident.lng], 15.5, {
-      animate: true,
-      duration: 1.2
-    });
-
-    // Auto-open marker popup on focus
     const marker = markersMapRef.current[focusedIncident.id];
+
+    // Only fly if the focused incident ID actually changed
+    if (focusedIncident.id !== lastFocusedIdRef.current) {
+      map.flyTo([Number(focusedIncident.lat), Number(focusedIncident.lng)], 15.5, {
+        animate: true,
+        duration: 1.2
+      });
+      lastFocusedIdRef.current = focusedIncident.id;
+    }
+
     if (marker) {
       // Open immediately in case the map is already in position
       marker.openPopup();
@@ -549,7 +557,7 @@ export default function MapSection({
         map.off('moveend', handleMoveEnd);
       };
     }
-  }, [focusedIncident]);
+  }, [focusedIncident, incidents, services, farms]);
 
   return (
     <section className="map-workspace" aria-label="Mapa interactivo de Cúcuta">
