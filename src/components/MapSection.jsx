@@ -530,15 +530,24 @@ export default function MapSection({
 
     map.flyTo([focusedIncident.lat, focusedIncident.lng], 15.5, {
       animate: true,
-      duration: 1.5
+      duration: 1.2
     });
 
-    // Auto-open marker popup on focus after flight has proceeded
+    // Auto-open marker popup on focus
     const marker = markersMapRef.current[focusedIncident.id];
     if (marker) {
-      setTimeout(() => {
+      // Open immediately in case the map is already in position
+      marker.openPopup();
+
+      // Open on moveend to make sure it stays open after any pan/zoom animation finishes
+      const handleMoveEnd = () => {
         marker.openPopup();
-      }, 400);
+      };
+      map.on('moveend', handleMoveEnd);
+
+      return () => {
+        map.off('moveend', handleMoveEnd);
+      };
     }
   }, [focusedIncident]);
 
