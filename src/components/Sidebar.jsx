@@ -2,42 +2,43 @@ import React from 'react';
 import { 
   ShieldAlert, 
   Map, 
-  PhoneCall, 
   FileText, 
-  Settings, 
-  User, 
-  HelpCircle 
+  ShoppingBag
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ currentModule, onModuleChange }) {
   const modules = [
     {
-      id: 'mod-1',
-      name: 'Módulo 1: Reportes Públicos',
+      id: 'services',
+      name: 'M1: Reportes Públicos',
+      fullName: 'Módulo 1: Reportes de Servicios Públicos',
       icon: <FileText size={18} />,
-      active: false,
-      locked: true,
-    },
-    {
-      id: 'mod-2',
-      name: 'Módulo 2: Mapa Inseguridad',
-      icon: <ShieldAlert size={18} />,
-      active: true,
+      active: currentModule === 'services',
       locked: false,
     },
     {
-      id: 'mod-3',
-      name: 'Módulo 3: Ruta Segura',
-      icon: <Map size={18} />,
-      active: false,
-      locked: true,
+      id: 'insecurity',
+      name: 'M2: Mapa Inseguridad',
+      fullName: 'Módulo 2: Mapa de Inseguridad de Cúcuta',
+      icon: <ShieldAlert size={18} />,
+      active: currentModule === 'insecurity',
+      locked: false,
     },
     {
-      id: 'mod-4',
-      name: 'Módulo 4: Botón de Pánico',
-      icon: <PhoneCall size={18} />,
-      active: false,
-      locked: true,
+      id: 'routes',
+      name: 'M3: Rutas de Buseta',
+      fullName: 'Módulo 3: Rutas de Buseta y Senderos Seguros',
+      icon: <Map size={18} />,
+      active: currentModule === 'routes',
+      locked: false,
+    },
+    {
+      id: 'market',
+      name: 'M4: Mercado Campesino',
+      fullName: 'Módulo 4: Mercado Campesino de Cúcuta',
+      icon: <ShoppingBag size={18} />,
+      active: currentModule === 'market',
+      locked: false,
     }
   ];
 
@@ -51,22 +52,26 @@ export default function Sidebar() {
         </div>
         <div>
           <h1 className="brand-title">MiCúcuta</h1>
-          <div className="brand-tagline">Seguridad Ciudadana</div>
+          <div className="brand-tagline">Municipio Conectado</div>
         </div>
       </div>
 
       {/* Module Navigation */}
       <nav className="modules-list" aria-label="Módulos de la aplicación">
         {modules.map((mod) => (
-          <div
+          <button
             key={mod.id}
             className={`module-item ${mod.active ? 'active' : ''} ${mod.locked ? 'locked' : ''}`}
-            title={mod.locked ? 'Este módulo estará disponible pronto' : mod.name}
+            title={mod.fullName}
+            onClick={() => !mod.locked && onModuleChange(mod.id)}
+            style={{ background: 'none', border: 'none', width: 'calc(100% - 0px)', textAlign: 'left', display: 'flex', alignItems: 'center' }}
+            role="tab"
+            aria-selected={mod.active}
           >
             {mod.icon}
-            <span>{mod.name.replace('Módulo ', 'M')}</span>
+            <span style={{ marginLeft: '12px' }}>{mod.name}</span>
             {mod.locked && <span className="module-badge-locked">Pronto</span>}
-          </div>
+          </button>
         ))}
       </nav>
 
@@ -74,10 +79,10 @@ export default function Sidebar() {
       <div className="user-profile">
         <div className="avatar">UC</div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-primary)' }}>
             Usuario Cúcuta
           </span>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
             Vecino Verificado
           </span>
         </div>

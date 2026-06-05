@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   MapPin, 
@@ -7,7 +7,11 @@ import {
   Flame, 
   AlertTriangle, 
   Frown, 
-  Info 
+  Info,
+  Lightbulb,
+  Droplet,
+  Trash2,
+  Wrench
 } from 'lucide-react';
 
 export default function ReportModal({
@@ -17,12 +21,20 @@ export default function ReportModal({
   isPickingLocation,
   setIsPickingLocation,
   pickedLocation,
-  clearPickedLocation
+  clearPickedLocation,
+  currentModule = 'insecurity'
 }) {
   const [type, setType] = useState('');
   const [description, setDescription] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [severity, setSeverity] = useState('Media');
+
+  const isServices = currentModule === 'services';
+
+  // Reset type if we switch modules or modal opens
+  useEffect(() => {
+    setType('');
+  }, [currentModule, isOpen]);
 
   if (!isOpen) return null;
 
@@ -64,6 +76,39 @@ export default function ReportModal({
     }
   ];
 
+  const serviceTypes = [
+    {
+      name: 'Luminaria dañada',
+      icon: <Lightbulb size={18} />,
+      color: 'var(--color-rinas)', // Yellow/Orange
+      bg: 'rgba(234, 179, 8, 0.15)',
+      glow: 'rgba(234, 179, 8, 0.25)'
+    },
+    {
+      name: 'Hueco en la vía',
+      icon: <Wrench size={18} />,
+      color: 'var(--color-intento)', // Orange
+      bg: 'rgba(249, 115, 22, 0.15)',
+      glow: 'rgba(249, 115, 22, 0.25)'
+    },
+    {
+      name: 'Fuga de agua',
+      icon: <Droplet size={18} />,
+      color: 'var(--color-drogas)', // Purple/Cyan
+      bg: 'rgba(168, 85, 247, 0.15)',
+      glow: 'rgba(168, 85, 247, 0.25)'
+    },
+    {
+      name: 'Acumulación de basura',
+      icon: <Trash2 size={18} />,
+      color: 'var(--color-robo)', // Red
+      bg: 'rgba(239, 68, 68, 0.15)',
+      glow: 'rgba(239, 68, 68, 0.25)'
+    }
+  ];
+
+  const currentTypes = isServices ? serviceTypes : incidentTypes;
+
   const handleStartPicking = () => {
     setIsPickingLocation(true);
   };
@@ -76,7 +121,7 @@ export default function ReportModal({
       type,
       description,
       neighborhood,
-      severity,
+      severity: isServices ? undefined : severity, // Services doesn't require severity
       lat: pickedLocation.lat,
       lng: pickedLocation.lng
     });
@@ -107,8 +152,12 @@ export default function ReportModal({
         {/* Header */}
         <div className="modal-header">
           <h2 id="modal-title" className="modal-title">
-            <ShieldAlert size={20} style={{ color: 'var(--cucuta-red)' }} />
-            Reportar Incidente en Cúcuta
+            {isServices ? (
+              <Wrench size={20} style={{ color: 'var(--color-baja)' }} />
+            ) : (
+              <ShieldAlert size={20} style={{ color: 'var(--cucuta-red)' }} />
+            )}
+            {isServices ? 'Reportar Daño / Avería de Servicios' : 'Reportar Incidente en Cúcuta'}
           </h2>
           <button className="btn-close" onClick={onClose} aria-label="Cerrar modal">
             <X size={18} />
@@ -119,11 +168,13 @@ export default function ReportModal({
         <form onSubmit={handleSubmitReport}>
           <div className="modal-body">
             
-            {/* 1. Incident Type grid */}
+            {/* 1. Category selector grid */}
             <div className="form-group">
-              <label className="form-label">Tipo de Incidente *</label>
-              <div className="incident-selector-grid" role="radiogroup" aria-label="Selecciona tipo de incidente">
-                {incidentTypes.map((item) => (
+              <label className="form-label">
+                {isServices ? 'Tipo de Avería o Daño *' : 'Tipo de Incidente *'}
+              </label>
+              <div className="incident-selector-grid" role="radiogroup" aria-label="Selecciona tipo de reporte">
+                {currentTypes.map((item) => (
                   <button
                     key={item.name}
                     type="button"
@@ -186,10 +237,16 @@ export default function ReportModal({
 
             {/* 3. Description details */}
             <div className="form-group">
-              <label htmlFor="input-description" className="form-label">¿Qué sucedió? *</label>
+              <label htmlFor="input-description" className="form-label">
+                {isServices ? 'Descripción del Daño *' : '¿Qué sucedió? *'}
+              </label>
               <textarea
                 id="input-description"
-                placeholder="Describe los detalles del incidente (apariencia de sospechosos, dirección de escape, etc.)..."
+                placeholder={
+                  isServices 
+                    ? "Describe los detalles de la avería o daño público (ej. poste apagado, calle rota, fuga de agua, basura acumulada)..."
+                    : "Describe los detalles del incidente (apariencia de sospechosos, dirección de escape, etc.)..."
+                }
                 className="form-textarea"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -212,29 +269,31 @@ export default function ReportModal({
               />
             </div>
 
-            {/* 5. Severity level */}
-            <div className="form-group">
-              <label className="form-label">Nivel de Riesgo / Gravedad</label>
-              <div className="severity-selector" role="radiogroup" aria-label="Nivel de gravedad">
-                {severities.map((item) => (
-                  <button
-                    key={item.name}
-                    type="button"
-                    role="radio"
-                    aria-checked={severity === item.name}
-                    className={`severity-btn ${severity === item.name ? 'active' : ''}`}
-                    style={{
-                      '--sev-color': item.color,
-                      '--sev-bg': item.bg,
-                      '--sev-glow': item.glow
-                    }}
-                    onClick={() => setSeverity(item.name)}
-                  >
-                    {item.name}
-                  </button>
-                ))}
+            {/* 5. Severity level (Only for insecurity) */}
+            {!isServices && (
+              <div className="form-group">
+                <label className="form-label">Nivel de Riesgo / Gravedad</label>
+                <div className="severity-selector" role="radiogroup" aria-label="Nivel de gravedad">
+                  {severities.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      role="radio"
+                      aria-checked={severity === item.name}
+                      className={`severity-btn ${severity === item.name ? 'active' : ''}`}
+                      style={{
+                        '--sev-color': item.color,
+                        '--sev-bg': item.bg,
+                        '--sev-glow': item.glow
+                      }}
+                      onClick={() => setSeverity(item.name)}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -248,7 +307,7 @@ export default function ReportModal({
               className="btn-submit"
               disabled={!isFormValid}
             >
-              Publicar Alerta
+              {isServices ? 'Publicar Reporte' : 'Publicar Alerta'}
             </button>
           </div>
         </form>
