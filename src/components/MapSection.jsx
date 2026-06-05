@@ -47,6 +47,7 @@ export default function MapSection({
   const polylineRef = useRef(null);
   const pickedMarkerRef = useRef(null);
   const geoJsonLayerRef = useRef(null);
+  const markersMapRef = useRef({});
   
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [isLoadingComunas, setIsLoadingComunas] = useState(false);
@@ -108,6 +109,7 @@ export default function MapSection({
 
     // Clear previous markers
     markersGroup.clearLayers();
+    markersMapRef.current = {};
 
     // A. SERVICES MODULE MARKERS
     if (currentModule === 'services') {
@@ -174,6 +176,7 @@ export default function MapSection({
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
+        markersMapRef.current[srv.id] = marker;
       });
     }
 
@@ -237,6 +240,7 @@ export default function MapSection({
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
+        markersMapRef.current[inc.id] = marker;
       });
     }
 
@@ -290,6 +294,7 @@ export default function MapSection({
           .bindPopup(popupHtml, { closeButton: false });
         
         markersGroup.addLayer(marker);
+        markersMapRef.current[farm.id] = marker;
       });
     }
 
@@ -527,6 +532,14 @@ export default function MapSection({
       animate: true,
       duration: 1.5
     });
+
+    // Auto-open marker popup on focus after flight has proceeded
+    const marker = markersMapRef.current[focusedIncident.id];
+    if (marker) {
+      setTimeout(() => {
+        marker.openPopup();
+      }, 400);
+    }
   }, [focusedIncident]);
 
   return (
