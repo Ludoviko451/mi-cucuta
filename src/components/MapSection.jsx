@@ -550,8 +550,9 @@ export default function MapSection({
       // Open immediately in case the map is already in position
       marker.openPopup();
 
-      // Open on moveend to make sure it stays open after any pan/zoom animation finishes
+      // Open on moveend once to make sure it stays open after any pan/zoom animation finishes
       const handleMoveEnd = () => {
+        map.off('moveend', handleMoveEnd);
         marker.openPopup();
       };
       map.on('moveend', handleMoveEnd);
